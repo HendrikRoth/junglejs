@@ -3,17 +3,15 @@ const debug = require('debug')('express:server');
 const path = require('path');
 const rollup = require('rollup');
 const fs = require('fs-extra');
-const grayMatter = require('gray-matter');
-const marked = require('marked');
 const cors = require('cors');
 const graphqlRouter = require('express-graphql');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const http = require('http');
+const uuid = require("uuid");
 
 const { SchemaComposer } = require('graphql-compose');
-const { composeWithJson } = require('graphql-compose-json');
-const find = require('lodash.find');;
+const DataSources = require('./dataSources');
 
 const jungleGraphql = (jungleConfig, dirname) => {
 	const app = express();
@@ -38,7 +36,8 @@ const gql = require('graphql-tag');
 const fetch = require("node-fetch");
 const ApolloClient = require('apollo-boost').default;
 
-const port = process.env.PORT || '3000';
+const serverPort = process.env.PORT || '3000';
+const graphqlPort = process.env.GRAPHQL_PORT || '3001';
 
 module.exports = {
 	junglePreprocess: {
@@ -68,7 +67,7 @@ module.exports = {
 			const query = content.slice(queryVarStart, queryVarEnd);
 
 			const client = new ApolloClient({
-				uri: `http://localhost:${port}/graphql`,
+				uri: `http://localhost:${graphqlPort}/graphql`,
 				fetch: fetch,
 			});
 
@@ -80,7 +79,7 @@ module.exports = {
 		},
 	},
 	startGraphqlServer: (jungleConfig, dirname, callback) => {
-		const port = normalizePort(process.env.PORT || '3000');
+		const port = normalizePort(graphqlPort);
 
 		const jGraphql = jungleGraphql(jungleConfig, dirname);
 
@@ -97,7 +96,7 @@ module.exports = {
 		graphqlServer.on('close', () => { console.log('Stopped GraphQL Server'); callback() });
 	},
 	startAppServer: (app) => {
-		const port = normalizePort(process.env.PORT || '3000');
+		const port = normalizePort(serverPort);
 
 		app.use(logger('dev'));
 		app.use(express.json());
@@ -141,7 +140,7 @@ async function processDirectoryForParameters(jungleConfig, dirname, src, extensi
 				const rawSvelteFile = fs.readFileSync(path.join(dirname, `${src}${extension}/${file}`), "utf8");
 				const queryParamOpts =  RegExp(/const QUERYPARAMOPTS = `([^]*?)`;/gm).exec(rawSvelteFile)[1];
 				
-				const client = new ApolloClient({uri: `http://localhost:${port}/graphql`, fetch: fetch});
+				const client = new ApolloClient({uri: `http://localhost:${graphqlPort}/graphql`, fetch: fetch});
 				const data = Object.values((await client.query({ query: gql`${queryParamOpts}` })).data)[0];
 
 				const parameterOptions = {};
@@ -248,61 +247,22 @@ function onListening(server) {
 	console.log('Server listening on ' + bind + '\n');
 }
 
+function generateId() {
+	return uuid.v1();
+}
+
 function generateSchema(dataSources, dirname) {
 	const schemaComposer = new SchemaComposer();
 
 	dataSources.forEach(source => {
 		const typeName = source.name.charAt(0).toUpperCase() + source.name.slice(1);
-		let newFields = {};
 
-		switch (source.format) {
-			case "json":
-				composeWithJson(typeName, source.items[0], { schemaComposer });
+		const DataSource = DataSources[source.format];
+		if (!DataSource) throw new Error("dataSource for format " + source.format + " not found.");
+		const dataSource = DataSource({generateId, dataSource: source.format, typeName, dirname, source, schemaComposer});
 
-				newFields[source.name] = {
-					type: typeName,
-					args: source.queryArgs,
-					resolve: (_, args) => find(source.items, args),
-				};
-
-				newFields[source.name + "s"] = {
-					type: `[${typeName}]`,
-					resolve: () => source.items,
-				};
-				break;
-			case "dir/markdown":
-				const frontMatterData = fs.readdirSync(path.join(dirname, source.items)).map((fileName) => {
-					const post = fs.readFileSync(
-						path.resolve(path.join(dirname, source.items), fileName),
-						"utf-8"
-					);
-
-					const renderer = new marked.Renderer();
-
-					const { data, content } = grayMatter(post);
-					const html = marked(content, { renderer });
-
-					data['path'] = fileName.substring(0, fileName.length - 3);
-
-					return { html, ...data };
-				})
-
-				composeWithJson(typeName, frontMatterData[0], { schemaComposer });
-
-				newFields[source.name] = {
-					type: typeName,
-					args: source.queryArgs,
-					resolve: (_, args) => find(frontMatterData, args),
-				};
-
-				newFields[source.name + "s"] = {
-					type: `[${typeName}]`,
-					resolve: () => frontMatterData,
-				};
-				break;
-		}
-
-		schemaComposer.Query.addFields(newFields);
+		schemaComposer.Query.addFields(dataSource.query());
+		if (dataSource.mutation) schemaComposer.Mutation.addFields(dataSource.mutation());
 	});
 
 	return schemaComposer.buildSchema();

@@ -26,7 +26,7 @@ module.exports = {
 
                 resolve({
                     browser: true,
-                    dedupe: ["svelte"],
+                    dedupe: ['svelte'],
                 }),
                 commonjs(),
 
@@ -38,12 +38,12 @@ module.exports = {
         return {
             sourcemap: /*!production ? 'inline' : */false,
             format: 'iife',
-            name: "app",
+            name: 'app',
             file: `jungle/build${extension}/${filename}/bundle.js`,
         };
     },
     ssrInputOptions: (filename, extension) => {
-        const processedFilename = filename == "." ? "Index" : filename.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+        const processedFilename = filename == '.' ? 'Index' : filename.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('');
 
         return {
             input: `src/routes${extension}/${processedFilename}.svelte`,
@@ -53,7 +53,7 @@ module.exports = {
                     preprocess: [
                         junglePreprocess,
                     ],
-                    generate: "ssr",
+                    generate: 'ssr',
                     hydratable: true,
                     css: (css) => {
                         css.write(`jungle/build${extension}/${filename}/bundle.css`);
@@ -62,7 +62,7 @@ module.exports = {
 
                 resolve({
                     browser: true,
-                    dedupe: ["svelte"],
+                    dedupe: ['svelte'],
                 }),
                 commonjs(),
 
@@ -86,14 +86,26 @@ module.exports = {
     },
     dataSources: [
         {
-            format: "json", name: "author", items: [
+            format: 'json',
+            name: 'author',
+            items: [
                 { id: 1, firstName: 'Tom', lastName: 'Coleman' },
                 { id: 2, firstName: 'Sashko', lastName: 'Stubailo' },
                 { id: 3, firstName: 'Mikhail', lastName: 'Novikov' },
-            ], queryArgs: { id: 'Int!' },
+            ],
+            queryArgs: { id: 'Int!' },
+            createArgs: { id: 'Int!', firstName: 'String!', lastName: 'String!' },
+            updateArgs: { id: 'Int!', firstName: 'String!', lastName: 'String!' },
+            defaultValues: { }
         },
         {
-            format: "dir/markdown", name: "post", items: 'static/posts/', queryArgs: { slug: 'String!' },
+            format: 'dir/markdown',
+            name: 'post',
+            items: 'static/posts/',
+            queryArgs: { slug: 'String!' },
+            createArgs: { tags: '[JSON]', title: 'String!', slug: 'String!', subtitle: 'String!', summary: 'String', publish_date: 'String', feature_image: 'String', author: 'String!'},
+            updateArgs: { tags: '[JSON]', title: 'String!', slug: 'String!', subtitle: 'String!', summary: 'String', publish_date: 'String', feature_image: 'String', author: 'String!'},
+            defaultValues: { publish_date: new Date().toISOString() }
         }
     ]
 };
