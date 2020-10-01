@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
-import rollup from "rollup";
+import * as rollup from "rollup";
 import ApolloClient from "apollo-boost";
 import gql from "graphql-tag";
 import * as fetch from "node-fetch";

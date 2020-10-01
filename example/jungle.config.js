@@ -4,8 +4,8 @@ const resolve = require('@rollup/plugin-node-resolve').default;
 const commonjs = require('@rollup/plugin-commonjs');
 const ssr = require('rollup-plugin-svelte-ssr');
 
-const JungleJS = require('junglejs');
-const junglePreprocess = new JungleJS().preprocess();
+const JungleJS = require('junglejs').default;
+const junglePreprocess = new JungleJS({}).preprocess();
 
 const production = !!process.env.PRODUCTION;
 

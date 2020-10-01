@@ -1,21 +1,22 @@
 {
   "include": ["./src"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     "rootDir": "src",
-    "lib": ["es2017"],
-    "target": "es2017",
-    /*
-    "declaration": true,
-    "declarationDir": "types",
-    */
+    "outDir": "dist",
+    "lib": ["esnext"],
+    "target": "es6",
+    "skipLibCheck": true,
     "noEmitOnError": true,
     "noErrorTruncation": true,
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "declaration": true,
     "allowSyntheticDefaultImports": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
+    "esModuleInterop": true,
     "noUnusedParameters": true
   }
 }
