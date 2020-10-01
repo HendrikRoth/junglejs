@@ -1,7 +1,12 @@
+import fs from "fs-extra";
+
 import isSvelteFile from "../utils/isSvelteFile";
 import isFileParameters from "../utils/isFileParameters";
+import colorLog from "../utils/colorLog";
+import { processFile, processFileForParameters } from "./processFile";
 
 export default async function onRouteUpdate(
+  port: number,
   event: string,
   path: string,
   src,
@@ -34,7 +39,7 @@ export default async function onRouteUpdate(
         }
       } else {
         if (isFileParameters(fileName))
-          await processFileForParameters(fileName, dirname, src, pathNoFile);
+          await processFileForParameters(port, fileName, dirname, src, pathNoFile);
         else
           await processFile(fileName, jungleConfig, dirname, src, pathNoFile);
       }

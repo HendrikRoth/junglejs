@@ -1,12 +1,12 @@
 import fs from "fs-extra";
-import express from "express";
 import path from "path";
+import express from "express";
 import chokidar from "chokidar";
 
 import copyStaticFiles from "../utils/copyStaticFiles";
 import onRouteUpdate from "./onRouteUpdate";
 
-export default async function watchRoutes(dirname: string, appServer, config) {
+export default async function watchRoutes(port: number, dirname: string, appServer, config) {
   await fs.remove("jungle");
   await fs.ensureDir("jungle/build");
   await fs.ensureDir("jungle/.cache");
@@ -46,12 +46,12 @@ export default async function watchRoutes(dirname: string, appServer, config) {
   await chokidar
     .watch("src/routes")
     .on("all", (e, p) =>
-      onRouteUpdate(e, p, "src/routes", config, dirname)
+      onRouteUpdate(port, e, p, "src/routes", config, dirname)
     );
 
   await chokidar
     .watch("jungle/.cache/routes")
     .on("all", (e, p) =>
-      onRouteUpdate(e, p, "jungle/.cache/routes", config, dirname)
+      onRouteUpdate(port, e, p, "jungle/.cache/routes", config, dirname)
     );
 }

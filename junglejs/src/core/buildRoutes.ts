@@ -1,6 +1,7 @@
-import fs from "fs-extra";
+import * as fs from "fs-extra";
+import { processDirectory, processDirectoryForParameters } from "./processDirectory";
 
-export default async function buildRoutes(jungleConfig, dirname, callback?: Function) {
+export default async function buildRoutes(port, jungleConfig, dirname, callback?: Function) {
 		await fs.remove(`jungle`);
 		await fs.ensureDir(`jungle/build`);
 		await fs.ensureDir(`jungle/.cache`);
@@ -9,7 +10,7 @@ export default async function buildRoutes(jungleConfig, dirname, callback?: Func
 		await fs.copy('static', 'jungle/build');
 
 		await processDirectory(jungleConfig, dirname, 'src/routes');
-		await processDirectoryForParameters(jungleConfig, dirname, 'src/routes');
+		await processDirectoryForParameters(port, jungleConfig, dirname, 'src/routes');
 		await processDirectory(jungleConfig, dirname, 'jungle/.cache/routes');
 
     if (callback) callback();

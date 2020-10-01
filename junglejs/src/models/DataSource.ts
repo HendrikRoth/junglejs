@@ -6,7 +6,7 @@ import { SchemaComposer } from "graphql-compose";
 export interface DataSourceParams<ITEM_TYPE, DEFAULT_VALUE_TYPE> {
   name: string;
   format: string;
-  items: ITEM_TYPE[];
+  items: ITEM_TYPE;
   queryArgs: GraphQLArgs;
   createArgs?: GraphQLArgs;
   updateArgs?: GraphQLArgs;
@@ -17,11 +17,11 @@ export default class DataSource<ITEM_TYPE, DEFAULT_VALUE_TYPE> extends Plugin {
   name: string;
   typeName: string;
   format: string;
-  items: ITEM_TYPE[];
+  items: ITEM_TYPE;
   defaultValues: DEFAULT_VALUE_TYPE;
-  queryArgs: GraphQLArgs;
-  createArgs: GraphQLArgs;
-  updateArgs: GraphQLArgs;
+  queryArgs: any;
+  createArgs: any;
+  updateArgs: any;
   composeWithJson: Function = composeWithJson;
   schemaComposer: SchemaComposer<ITEM_TYPE>;
 
@@ -30,7 +30,7 @@ export default class DataSource<ITEM_TYPE, DEFAULT_VALUE_TYPE> extends Plugin {
 
     this.schemaComposer = schemaComposer;
     this.name = params.name;
-    this.typeName = name.charAt(0).toUpperCase() + name.slice(1);
+    this.typeName = this.name.charAt(0).toUpperCase() + this.name.slice(1);
     this.format = params.format;
     this.items = params.items;
     this.queryArgs = params.queryArgs;

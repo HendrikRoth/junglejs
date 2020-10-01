@@ -1,15 +1,20 @@
-import fetch from "node-fetch";
+import express from "express";
 
 import normalizePort from "./utils/normalizePort";
 import processContent from "./core/processContent";
+import readRoutes from "./core/readRoutes";
 import { startAppServer } from "./core/appServer";
 import { startGraphqlServer } from "./core/graphqlServer";
+
+export interface JungleJsConfig {}
 
 interface JungleJsParams {
   port?: string | number;
   graphqlPort?: string | number;
   queryName?: string;
   resVarName?: string;
+  config: JungleJsConfig;
+  useGraphIQL?: boolean;
 }
 
 export default class JungleJs {
@@ -17,9 +22,8 @@ export default class JungleJs {
   private graphqlPort: number;
   private queryName: string;
   private resVarName: string;
-  private appServer;
-  private graphqlServer;
-  private liveReloadServer;
+  private config: JungleJsConfig;
+  private useGraphIQL;
 
   constructor(params: JungleJsParams) {
     this.port = normalizePort(params.port || process.env.PORT || 3000);
@@ -29,19 +33,28 @@ export default class JungleJs {
     this.queryName = params.queryName || process.env.QUERY_NAME || "QUERY";
     this.resVarName =
       params.resVarName || process.env.RES_VAR_NAME || "QUERYRES";
+    this.useGraphIQL = params.useGraphIQL || process.env.USE_GRAPH_IQL || process.env.NODE_ENV === "production";
+    this.config = params.config;
   }
 
-  async process(content: string) {
-    return processContent(content, {queryName: this.queryName, resVarName: this.resVarName, graphqlPort: this.graphqlPort});
+  async preprocess() {
+    return {
+      script: async ({content}) => {
+        return processContent(content, {queryName: this.queryName, resVarName: this.resVarName, graphqlPort: this.graphqlPort})
+      }
+    };
   }
 
-  startAppServer(callback: Function) {
-    const result = startAppServer(this.port, callback);
-    this.appServer = result.appServer;
-    this.liveReloadServer = result.liveReloadServer;
+  async startAppServer(app: express.Router) {
+    startAppServer(app, this.port);
   }
 
-  startGraphqlServer(callback: Function) {
-    this.graphqlServer = startGraphqlServer(this.graphqlPort, callback);
+  async startGraphqlServer(callback) {
+    startGraphqlServer(this.config, this.graphqlPort, callback, this.useGraphIQL);
+  }
+
+  run(dirname: string) {
+    const app = express();
+    this.startGraphqlServer(() => readRoutes(this.port, this.config, app, dirname).then(() => this.startAppServer(app)));
   }
 }

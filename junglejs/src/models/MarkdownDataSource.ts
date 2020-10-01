@@ -15,7 +15,7 @@ const FILE_EXTENSION = ".md";
 
 interface MarkdownDataSourceParams<DEFAULT_VALUE_TYPE> {
   name: string;
-  items: string[];
+  items: string;
   queryArgs: GraphQLArgs;
   createArgs?: GraphQLArgs;
   updateArgs?: GraphQLArgs;
@@ -43,6 +43,7 @@ export default class MarkdownDataSource<DEFAULT_VALUE_TYPE> extends DataSource<
     this.records = [];
 
     const { dirname, items, records, query, mutation, format } = this;
+
     fs.readdirSync(path.join(dirname, items)).map((fileName) => {
       const item = fs.readFileSync(
         path.resolve(path.join(dirname, items), fileName),

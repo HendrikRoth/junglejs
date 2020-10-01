@@ -3,7 +3,6 @@ import { v1 } from "uuid";
 import find from "lodash.find";
 
 import DataSource from "./DataSource";
-import { Source } from "graphql";
 
 export default class JsonDataSource<DEFAULT_VALUE_TYPE> extends DataSource<
   any[],
@@ -77,6 +76,7 @@ export default class JsonDataSource<DEFAULT_VALUE_TYPE> extends DataSource<
       resolve: (_, args) => {
         const origin = items.find((x) => x._id === args._id);
         const updatedRecord = { ...origin, ...args };
+        console.log(updatedRecord);
         // TODO
         return true;
       },
@@ -86,6 +86,7 @@ export default class JsonDataSource<DEFAULT_VALUE_TYPE> extends DataSource<
       type: "Boolean!",
       args: { _id: "String!" },
       resolve: (_, args) => {
+        console.log(args);
         return true;
       },
     };

@@ -2,9 +2,12 @@ import fs from "fs-extra";
 import path from "path";
 import rollup from "rollup";
 import ApolloClient from "apollo-boost";
+import gql from "graphql-tag";
+import * as fetch from "node-fetch";
 
 import isSvelteFile from "../utils/isSvelteFile";
 import isFileParameters from "../utils/isFileParameters";
+import colorLog from "../utils/colorLog";
 
 export async function processFile(file, jungleConfig, dirname, src, extension) {
 	const fileParts = file.split('.');
@@ -38,7 +41,7 @@ export async function processFile(file, jungleConfig, dirname, src, extension) {
 	}
 }
 
-export async function processFileForParameters(file, dirname, src, extension, port) {
+export async function processFileForParameters(port, file, dirname, src, extension) {
 	const fileParts = file.split('.');
 	const fileParameters = isFileParameters(file) ? fileParts[0].substring(1, fileParts[0].length - 1).split(',') : [];
 
@@ -46,10 +49,12 @@ export async function processFileForParameters(file, dirname, src, extension, po
 		const rawSvelteFile = fs.readFileSync(path.join(dirname, `${src}${extension}/${file}`), "utf8");
 		const queryParamOpts = RegExp(/const QUERYPARAMOPTS = `([^]*?)`;/gm).exec(rawSvelteFile)[1];
 
-		const client = new ApolloClient({ uri: `http://localhost:${port}/graphql`, fetch: fetch });
-		const data = Object.values((await client.query({ query: gql`${queryParamOpts}` })).data)[0];
+    const client = new ApolloClient({ uri: `http://localhost:${port}/graphql`, fetch: fetch });
+    // todo
+		const data: any = Object.values((await client.query({ query: gql`${queryParamOpts}` })).data)[0];
 
-		const parameterOptions = {};
+    // todo
+		const parameterOptions: any = {};
 		parameterOptions[Object.keys(data[0])[0]] = data.map(m => Object.values(m)[0]);
 
 		fileParameters.forEach(fileParameter => {

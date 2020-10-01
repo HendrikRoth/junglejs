@@ -1,19 +1,18 @@
 import http from "http";
-import cookieParser from "cookie-parser";
 import express from "express";
-import { default as LiveReload } from "livereload";
+import cookieParser from "cookie-parser";
+const livereload = require("livereload");
 
 import onError from "./onError";
-import onListening from "./onListening";
 
 export function startAppServer(
+  app,
   port,
-  callback: Function,
+  callback?: Function,
   options: { liveReload: boolean } = { liveReload: true }
 ) {
   let liveReloadServer = null;
 
-  const app = express();
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
@@ -23,11 +22,11 @@ export function startAppServer(
   appServer.listen(port);
   appServer.on("error", (err) => onError(err, port));
   appServer.on("listening", () => {
-    onListening(appServer);
+    onAppListening(appServer);
     callback();
   });
 
-  if (options.liveReload) liveReloadServer = LiveReload.createServer();
+  if (options.liveReload) liveReloadServer = livereload.createServer();
 
   return {
     appServer,
@@ -46,4 +45,5 @@ export default function onAppListening(server: http.Server) {
   const addr = server.address();
   const bind =
     typeof addr === "string" ? "pipe " + addr : "http://localhost:" + addr.port;
+  console.log("Server listening on ", bind);
 }

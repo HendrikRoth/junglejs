@@ -2,6 +2,7 @@ import acorn from "acorn";
 import walk from "acorn-walk";
 import ApolloClient from "apollo-boost";
 import gql from "graphql-tag";
+import * as fetch from "node-fetch";
 
 export default async function processContent(content: string, options: {queryName: string, resVarName: string, graphqlPort: number}) {
   let queryVarStart, queryVarEnd, resVarStart, resVarEnd;
@@ -11,7 +12,7 @@ export default async function processContent(content: string, options: {queryNam
   walk.simple(tree, {
     VariableDeclaration(node) {
       // todo
-      node.declarations.forEach((declaration) => {
+      (node as any).declarations.forEach((declaration) => {
         if (declaration.id.name === queryName) {
           queryVarStart = declaration.init.start + 1;
           queryVarEnd = declaration.init.end + 1;
